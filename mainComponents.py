@@ -816,6 +816,8 @@ class myTabWidget(QTabWidget):
         self.connect(self, SIGNAL("tabCloseRequested(int)"),self.closeTab)
         self.connect(self, SIGNAL("currentChanged(int)"),self.currentTabChange)
 
+        self.fileInfo = None
+
     def closeTab(self,tabId):
         if tabId<0:
             return
@@ -874,6 +876,9 @@ class myTabWidget(QTabWidget):
         #    print("creatNewTab has other endswith.")
         msg=msg.replace("\r\n","\r")
         msg=msg.replace("\n","\r")
+
+        # Saving file information when loading
+        self.fileInfo = QFileInfo(filename)
 
         #editor=QsciScintilla()
         editor=myQsciScintilla()
@@ -1008,8 +1013,35 @@ class myTabWidget(QTabWidget):
         self.connect(editor,SIGNAL("linesChanged()"),self.linesChanged)
         self.connect(editor,SIGNAL("cursorPositionChanged(int,int)"),self.cursorPositionChanged)
         self.connect(editor,SIGNAL("userListActivated(int,const QString)"),self.userListActivated)
+        self.connect(editor,SIGNAL("SCN_FOCUSIN()"), self.userSCN_FOCUSIN)
         #self.connect(editor,SIGNAL("SCN_AUTOCSELECTION(const char*,int)"),self.scn_updateui)
 
+    def userSCN_FOCUSIN(self):
+        filename = self.fileitem.list[self.currentTab]
+
+        local_fileInfo = QFileInfo(filename)
+
+        # Reload on change
+        if local_fileInfo.lastModified() > self.fileInfo.lastModified():
+            confirmText = "The file has changed.\nreload ?"
+
+            button = QMessageBox.question(self,"Reload",
+                                        confirmText,
+                                        QMessageBox.Ok | QMessageBox.Cancel,  
+                                        QMessageBox.Ok)  
+
+            if button == QMessageBox.Ok:
+                editor = self.currentWidget()
+                prev_scroll_position = editor.verticalScrollBar().value()
+
+                self.closeTab(self.currentTab)
+                self.ui.pcOpenFile(filename)
+
+                editor = self.currentWidget()
+
+                #editor.setCursorPosition(10, 0)
+                editor.verticalScrollBar().setValue(prev_scroll_position)
+    
     def slotEditorRightClickMenu(self,point):
         self.editorRightMenu.exec_(self.currentWidget().mapToGlobal(point))
 
