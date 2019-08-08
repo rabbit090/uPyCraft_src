@@ -1887,10 +1887,10 @@ class MainWidget(QMainWindow):
 
         if not self.editClassFileitem(filename):
             return
-        try:
-            self.asciiTOutf8(filename)
-        except:
-            print("file ascii to utf8 err.")
+        #try:
+        #    self.asciiTOutf8(filename)
+        #except:
+        #    print("file ascii to utf8 err.")
         
         msg=open(filename,"rbU").read()
         if type(msg) is bytes:
