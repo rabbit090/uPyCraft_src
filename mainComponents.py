@@ -967,7 +967,7 @@ class myTabWidget(QTabWidget):
 
         #set indent replace 4 space        
         editor.setIndentationsUseTabs(False)
-        editor.setTabWidth(2)
+        editor.setTabWidth(4)
 
         #The line number display area
         editor.setMarginType(0, QsciScintilla.NumberMargin)
