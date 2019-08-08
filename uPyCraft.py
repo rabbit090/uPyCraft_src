@@ -1020,6 +1020,7 @@ class MainWidget(QMainWindow):
             savefile.write(self.saveStr.encode('utf-8'))
             savefile.close()
             self.tabWidget.setTabText(self.tabWidget.currentIndex(),tabname[1:])
+            self.tabWidget.currentWidget().file_last_modified = QFileInfo(filepath).lastModified()
 
     def slotSaveFileAs(self):
         if self.tabWidget.currentTab < 0:

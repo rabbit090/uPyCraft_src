@@ -816,8 +816,6 @@ class myTabWidget(QTabWidget):
         self.connect(self, SIGNAL("tabCloseRequested(int)"),self.closeTab)
         self.connect(self, SIGNAL("currentChanged(int)"),self.currentTabChange)
 
-        self.file_last_modified = None
-
     def closeTab(self,tabId):
         if tabId < 0:
             return
@@ -877,9 +875,6 @@ class myTabWidget(QTabWidget):
         msg = msg.replace("\r\n","\r")
         msg = msg.replace("\n","\r")
 
-        # Saving file information when loading
-        self.file_last_modified = QFileInfo(filename).lastModified()
-
         #editor=QsciScintilla()
         editor = myQsciScintilla()
         editor.setUtf8(True)
@@ -890,6 +885,9 @@ class myTabWidget(QTabWidget):
         editor.setAutoCompletionSource(QsciScintilla.AcsAll)
         editor.setEolMode(QsciScintilla.EolUnix)
         
+        # Saving file information when loading
+        editor.file_last_modified = QFileInfo(filename).lastModified()
+
         #显示缩进参考线
         editor.SendScintilla(QsciScintilla.SCI_SETINDENTATIONGUIDES,QsciScintilla.SC_IV_LOOKFORWARD)
         #设置匹配项的背景色
@@ -1019,10 +1017,13 @@ class myTabWidget(QTabWidget):
     def userSCN_FOCUSIN(self):
         filename = self.fileitem.list[self.currentTab]
 
+        # editor = self.currentWidget()
+        editor = self.widget(self.currentTab)
+
         local_fileInfo = QFileInfo(filename)
 
         # Reload on change
-        if local_fileInfo.lastModified() > self.file_last_modified:
+        if local_fileInfo.lastModified() > editor.file_last_modified:
             confirmText = "The file has changed.\nreload ?"
 
             button = QMessageBox.question(self.ui,"Reload",
@@ -1031,16 +1032,15 @@ class myTabWidget(QTabWidget):
                                         QMessageBox.Ok)  
 
             if button == QMessageBox.Ok:
-                editor = self.currentWidget()
                 prev_scroll_position = editor.verticalScrollBar().value()
 
                 self.closeTab(self.currentTab)
                 self.ui.pcOpenFile(filename)
 
-                editor = self.currentWidget()
+                new_editor = self.currentWidget()
 
-                #editor.setCursorPosition(10, 0)
-                editor.verticalScrollBar().setValue(prev_scroll_position)
+                #new_editor.setCursorPosition(10, 0)
+                new_editor.verticalScrollBar().setValue(prev_scroll_position)
     
     def slotEditorRightClickMenu(self,point):
         self.editorRightMenu.exec_(self.currentWidget().mapToGlobal(point))
@@ -1190,6 +1190,7 @@ class myTabWidget(QTabWidget):
 
 class myQsciScintilla(QsciScintilla):
     def __init__(self,parent=None):
+        self.file_last_modified = None
         super(myQsciScintilla,self).__init__(parent)
 
     def dragEnterEvent(self,event):
